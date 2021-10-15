@@ -314,7 +314,7 @@ func (p *PageTemplate) ScreenShotWithOption(el *ElementTemplate, dumpPath string
 
 func (p *PageTemplate) SelectOrPanic(selector string) *ElementTemplate {
 	if false == p.Has(selector) {
-		panic(fmt.Errorf("%s block is missng", selector))
+		panic(fmt.Errorf("%s block is missing", selector))
 	}
 
 	return p.El(selector)
