@@ -27,20 +27,24 @@ func WaitFor(targetName string, timeout, retryDuration time.Duration, checkFunc 
 	started := time.Now()
 	lastRetry := time.Now()
 
-	for timeout > time.Now().Sub(started) {
+	for {
 		if true == checkFunc() {
 			return nil
 		}
 
-		sleepDuration := retryDuration - time.Now().Sub(lastRetry)
-		if sleepDuration < 0 {
-			sleepDuration = retryDuration
+		elapsed := time.Now().Sub(started)
+		if timeout < elapsed {
+			break
+		} else {
+			sleepDuration := retryDuration - time.Now().Sub(lastRetry)
+			log.Println("retry after sleep", sleepDuration, "for retryDuration", retryDuration, "waiting for", targetName)
+			if sleepDuration < 0 {
+				sleepDuration = retryDuration
+			}
+			time.Sleep(sleepDuration)
+			retryFunc()
+			lastRetry = time.Now()
 		}
-		time.Sleep(sleepDuration)
-		retryFunc()
-		lastRetry = time.Now()
-
-		log.Println("retry after sleep", sleepDuration, "for retryDuration", retryDuration, "waiting for", targetName)
 	}
 
 	message := fmt.Sprintf("timeout %s exceeded after %s waiting for %s", timeout, started, targetName)
