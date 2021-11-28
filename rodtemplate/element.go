@@ -54,7 +54,7 @@ func (e ElementTemplate) Height() float64 {
 }
 
 func (e ElementTemplate) SelectOrPanic(selector string) *ElementTemplate {
-	if false == e.Has(selector) {
+	if !e.Has(selector) {
 		panic(fmt.Errorf("element is missing %s sub element", selector))
 	}
 
@@ -90,7 +90,7 @@ func (e ElementTemplate) MustAttributeAsInt(attr string) int {
 
 func (e ElementTemplate) WaitUntilHas(selector string) bool {
 	for i := 0; i < 1000; i++ {
-		if true == e.Has(selector) {
+		if e.Has(selector) {
 			return true
 		}
 		time.Sleep(time.Millisecond * 100)

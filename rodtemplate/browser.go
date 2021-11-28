@@ -39,7 +39,7 @@ func (b *BrowserTemplate) Login(h LoginHandler) (*PageTemplate, error) {
 
 	page := b.MustPage(h.LoginGateURL)
 	if err := page.WaitLoad(); err != nil {
-		if false == cdp.ErrCtxDestroyed.Is(err) {
+		if !cdp.ErrCtxDestroyed.Is(err) {
 			panic(err)
 		}
 		log.Println(err.Error(), "occurred occasionally but has no problem")

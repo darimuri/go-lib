@@ -28,15 +28,15 @@ func WaitFor(targetName string, timeout, retryDuration time.Duration, checkFunc 
 	lastRetry := time.Now()
 
 	for {
-		if true == checkFunc() {
+		if checkFunc() {
 			return nil
 		}
 
-		elapsed := time.Now().Sub(started)
+		elapsed := time.Since(started)
 		if timeout < elapsed {
 			break
 		} else {
-			sleepDuration := retryDuration - time.Now().Sub(lastRetry)
+			sleepDuration := retryDuration - time.Since(lastRetry)
 			log.Println("retry after sleep", sleepDuration, "for retryDuration", retryDuration, "waiting for", targetName)
 			if sleepDuration < 0 {
 				sleepDuration = retryDuration

@@ -43,7 +43,7 @@ func (l *Login) Submit(b *rod.Browser) error {
 	var loginPt *PageTemplate
 
 	//find login input selector in iframes
-	if true == pt.Has("iframe") {
+	if pt.Has("iframe") {
 		for _, e := range pt.Els("iframe") {
 			iFrame, err := e.Frame()
 			if err != nil {
@@ -63,7 +63,7 @@ func (l *Login) Submit(b *rod.Browser) error {
 			myPt := &PageTemplate{P: iFrame}
 			myPt.WaitLoadAndIdle()
 
-			if true == myPt.Has(h.LoginInputSelector) {
+			if myPt.Has(h.LoginInputSelector) {
 				loginPt = myPt
 				break
 			}
@@ -80,7 +80,7 @@ func (l *Login) Submit(b *rod.Browser) error {
 			myPt := &PageTemplate{P: p}
 			myPt.WaitLoadAndIdle()
 
-			if true == myPt.Has(h.LoginInputSelector) {
+			if myPt.Has(h.LoginInputSelector) {
 				loginPt = myPt
 				break
 			}
@@ -90,7 +90,7 @@ func (l *Login) Submit(b *rod.Browser) error {
 	//find login input selector in page
 	if loginPt == nil {
 		for i := 0; i < 100; i++ {
-			if true == pt.Has(h.LoginInputSelector) {
+			if pt.Has(h.LoginInputSelector) {
 				loginPt = pt
 				break
 			}
@@ -134,7 +134,7 @@ func (l *Login) Submit(b *rod.Browser) error {
 			return errSuccessCheck
 		}
 
-		if false == success {
+		if !success {
 			return fmt.Errorf("login failed for LoginSuccessCheckHandler returned success failed")
 		}
 
@@ -152,7 +152,7 @@ func (l *Login) Submit(b *rod.Browser) error {
 			continue
 		}
 
-		if false == pt.Has(h.LoginSuccessSelector) {
+		if !pt.Has(h.LoginSuccessSelector) {
 			time.Sleep(time.Millisecond * 100)
 			continue
 		}
@@ -177,7 +177,7 @@ func (l *Login) Submit(b *rod.Browser) error {
 		screenshotLoginFailed := os.Getenv("SCREENSHOT_LOGIN_FAILED")
 		if screenshotLoginFailed == "1" && screenshotPath != "" {
 			if _, err := os.Stat(screenshotPath); err != nil {
-				if true == os.IsNotExist(err) {
+				if os.IsNotExist(err) {
 					if err = os.MkdirAll(screenshotPath, 0755); err != nil {
 						log.Println(err)
 						return errors.New("failed to login")

@@ -53,9 +53,9 @@ func (p *PageTemplate) ClickElement(selector string) {
 
 func (p *PageTemplate) ClickWhenAvailable(selector string) bool {
 	for i := 0; i < 1000; i++ {
-		if true == p.Has(selector) {
+		if p.Has(selector) {
 			el := p.El(selector)
-			if true == el.MustVisible() {
+			if el.MustVisible() {
 				el.MustFocus()
 				el.MustScrollIntoView()
 				el.MustClick()
@@ -69,7 +69,7 @@ func (p *PageTemplate) ClickWhenAvailable(selector string) bool {
 
 func (p *PageTemplate) FocusWhenAvailable(selector string) bool {
 	for i := 0; i < 1000; i++ {
-		if true == p.Has(selector) {
+		if p.Has(selector) {
 			el := p.El(selector)
 			el.MustFocus()
 			return true
@@ -99,13 +99,13 @@ func (p *PageTemplate) URL() string {
 
 func (p *PageTemplate) Input(selector string, value string) {
 	for i := 0; i < 100; i++ {
-		if true == p.P.MustHas(selector) {
+		if p.P.MustHas(selector) {
 			break
 		}
 		time.Sleep(time.Millisecond * 100)
 	}
 
-	if false == p.P.MustHas(selector) {
+	if !p.P.MustHas(selector) {
 		log.Fatalf("failed to find input having selector %s\n", selector)
 	}
 
@@ -313,14 +313,14 @@ func (p *PageTemplate) ScreenShotWithOption(el *ElementTemplate, dumpPath string
 }
 
 func (p *PageTemplate) SelectOrPanic(selector string) *ElementTemplate {
-	if false == p.Has(selector) {
+	if !p.Has(selector) {
 		panic(fmt.Errorf("%s block is missing", selector))
 	}
 
 	return p.El(selector)
 }
 
-//NewPageTemplate
+//NewPageTemplate ...
 func NewPageTemplate(p *rod.Page) *PageTemplate {
 	return &PageTemplate{P: p}
 }
