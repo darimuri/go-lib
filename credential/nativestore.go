@@ -1,24 +1,24 @@
 package credential
 
-import dcred "github.com/docker/docker-credential-helpers/credentials"
+import "github.com/docker/docker-credential-helpers/credentials"
 
 func Set(lbl, url, user, secret string) error {
-	cr := &dcred.Credentials{
+	cr := &credentials.Credentials{
 		ServerURL: url,
 		Username:  user,
 		Secret:    secret,
 	}
 
-	dcred.SetCredsLabel(lbl)
+	credentials.SetCredsLabel(lbl)
 	return ns.Add(cr)
 }
 
 func Get(lbl, url string) (string, string, error) {
-	dcred.SetCredsLabel(lbl)
+	credentials.SetCredsLabel(lbl)
 	return ns.Get(url)
 }
 
 func Del(lbl, url string) error {
-	dcred.SetCredsLabel(lbl)
+	credentials.SetCredsLabel(lbl)
 	return ns.Delete(url)
 }

@@ -38,65 +38,77 @@ func (l *Login) Submit(b *rod.Browser) error {
 	h := l.Handler
 	pt := l.PageTemplate
 
-	pt.WaitLoadAndIdle()
-
 	var loginPt *PageTemplate
 
-	//find login input selector in iframes
-	if pt.Has("iframe") {
-		for _, e := range pt.Els("iframe") {
-			iFrame, err := e.Frame()
-			if err != nil {
-				continue
-			}
+	pt.WaitLoad()
 
-			_, err = iFrame.Element("body")
-			if err != nil {
-				errMessage := err.Error()
-				if strings.Contains(errMessage, "Frame with the given id was not found.") {
+	for i := 0; i < 10; i++ {
+		//find login input selector in iframes
+		if pt.Has("iframe") {
+			for _, e := range pt.Els("iframe") {
+				iFrame, err := e.Frame()
+				if err != nil {
 					continue
-				} else {
-					return err
+				}
+
+				if has, _, errHas := iFrame.Has("body"); !has || errHas != nil {
+					continue
+				}
+
+				_, err = iFrame.Element("body")
+				if err != nil {
+					errMessage := err.Error()
+					if strings.Contains(errMessage, "Frame with the given id was not found.") {
+						continue
+					} else {
+						return err
+					}
+				}
+
+				myPt := &PageTemplate{P: iFrame}
+				myPt.WaitLoad()
+
+				if myPt.Has(h.LoginInputSelector) {
+					loginPt = myPt
+					break
 				}
 			}
+		}
 
-			myPt := &PageTemplate{P: iFrame}
-			myPt.WaitLoadAndIdle()
+		//find login input selector in another windows
+		if loginPt == nil {
+			for _, p := range b.MustPages() {
+				if p.FrameID == pt.FrameID() {
+					continue
+				}
 
-			if myPt.Has(h.LoginInputSelector) {
-				loginPt = myPt
-				break
+				myPt := &PageTemplate{P: p}
+				myPt.WaitLoad()
+
+				if myPt.Has(h.LoginInputSelector) {
+					loginPt = myPt
+					break
+				}
 			}
 		}
-	}
 
-	//find login input selector in another windows
-	if loginPt == nil {
-		for _, p := range b.MustPages() {
-			if p.FrameID == pt.FrameID() {
-				continue
-			}
+		//find login input selector in page
+		if loginPt == nil {
+			for i := 0; i < 100; i++ {
+				if pt.Has(h.LoginInputSelector) {
+					loginPt = pt
+					break
+				}
 
-			myPt := &PageTemplate{P: p}
-			myPt.WaitLoadAndIdle()
-
-			if myPt.Has(h.LoginInputSelector) {
-				loginPt = myPt
-				break
+				time.Sleep(time.Millisecond * 100)
 			}
 		}
-	}
 
-	//find login input selector in page
-	if loginPt == nil {
-		for i := 0; i < 100; i++ {
-			if pt.Has(h.LoginInputSelector) {
-				loginPt = pt
-				break
-			}
-
-			time.Sleep(time.Millisecond * 100)
+		if loginPt != nil {
+			break
 		}
+
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	if loginPt == nil {
@@ -115,11 +127,16 @@ func (l *Login) Submit(b *rod.Browser) error {
 		}
 	}
 
+	if l.Handler.LoginBeforeSubmitHandler != nil {
+		errBeforeSubmit := l.Handler.LoginBeforeSubmitHandler(loginPt)
+		if errBeforeSubmit != nil {
+			return errBeforeSubmit
+		}
+	}
+
 	loginPt.Input(h.LoginInputSelector, h.ID)
 	loginPt.Input(h.PasswordInputSelector, h.Password)
 	loginPt.PressKey(input.Enter)
-
-	pt.WaitLoadAndIdle()
 
 	if h.LoginPostSubmitHandler != nil {
 		errPostSubmit := h.LoginPostSubmitHandler(pt)
@@ -141,17 +158,7 @@ func (l *Login) Submit(b *rod.Browser) error {
 		return nil
 	}
 
-	pt.P.MustWaitNavigation()
-
 	for i := 0; i < 100; i++ {
-		if err := pt.P.WaitLoad(); err != nil {
-			continue
-		}
-
-		if err := pt.P.WaitIdle(time.Millisecond * 100); err != nil {
-			continue
-		}
-
 		if !pt.Has(h.LoginSuccessSelector) {
 			time.Sleep(time.Millisecond * 100)
 			continue

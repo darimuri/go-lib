@@ -26,6 +26,7 @@ type LoginHandler struct {
 
 	CaptchaHandler           func(pt *PageTemplate) error
 	LoginLinkHandler         func(pt *PageTemplate) error
+	LoginBeforeSubmitHandler func(pt *PageTemplate) error
 	LoginPostSubmitHandler   func(pt *PageTemplate) error
 	LoginSuccessCheckHandler func(pt *PageTemplate) (bool, error)
 }
@@ -62,26 +63,36 @@ func (b *BrowserTemplate) Login(h LoginHandler) (*PageTemplate, error) {
 
 	pt.WaitLoad()
 
+	if h.LoginSuccessSelector != "" && pt.Has(h.LoginSuccessSelector) {
+		return pt, nil
+	} else if h.LoginSuccessCheckHandler != nil {
+		succ, errHandle := h.LoginSuccessCheckHandler(pt)
+		if succ && errHandle == nil {
+			return pt, nil
+		} else if errHandle != nil {
+			log.Printf("failed to check login succes for error %s", errHandle.Error())
+		}
+	}
+
 	if h.LoginURL != "" {
-		if err := pt.Navigate(h.LoginURL); err != nil {
+		if err = pt.Navigate(h.LoginURL); err != nil {
 			return nil, err
 		}
 	} else if h.LoginLinkHandler != nil {
-		if err := h.LoginLinkHandler(pt); err != nil {
+		if err = h.LoginLinkHandler(pt); err != nil {
 			return nil, err
 		}
 	} else {
-		pt.WaitLoadAndIdle()
 		pt.ClickWhenAvailable(h.LoginLinkSelector)
 	}
 
 	login := &Login{PageTemplate: pt, Handler: h}
 
-	if err := login.Validate(); err != nil {
+	if err = login.Validate(); err != nil {
 		return nil, err
 	}
 
-	if err := login.Submit(b.Browser); err != nil {
+	if err = login.Submit(b.Browser); err != nil {
 		return nil, err
 	}
 

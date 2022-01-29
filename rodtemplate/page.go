@@ -22,6 +22,8 @@ type ScreenShotOption struct {
 	HeightDelta float64
 }
 
+var _ ElementSelector = (*PageTemplate)(nil)
+
 type PageTemplate struct {
 	P *rod.Page
 }
@@ -126,7 +128,8 @@ func (p *PageTemplate) WaitLoadAndIdle() {
 func (p *PageTemplate) Has(selector string) bool {
 	has, _, err := p.P.Has(selector)
 	if err != nil {
-		panic(err)
+		log.Printf("failed to find element using selector %s\n", selector)
+		return false
 	}
 
 	return has
@@ -196,13 +199,15 @@ func (p *PageTemplate) ScrollBottomHuman() {
 	width := int(metrics.ContentSize.Width)
 	height := int(metrics.ContentSize.Height)
 
-	p.P.Mouse.Scroll(float64(width), float64(height), height/128)
+	if err = p.P.Mouse.Scroll(float64(width), float64(height), height/128); err != nil {
+		panic(fmt.Errorf("failed to scroll for %s", err.Error()))
+	}
 }
 
 func (p *PageTemplate) ScrollTo(e *ElementTemplate) {
 	quad := e.MustShape().Quads[0]
-	ybottom := quad[7]
-	if err := p.P.Mouse.Scroll(0.0, ybottom, 1); err != nil {
+	bottom := quad[7]
+	if err := p.P.Mouse.Scroll(0.0, bottom, 1); err != nil {
 		log.Println("failed to scroll mouse", err)
 	}
 }

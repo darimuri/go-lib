@@ -9,6 +9,14 @@ import (
 	"github.com/go-rod/rod"
 )
 
+type ElementSelector interface {
+	El(selector string) *ElementTemplate
+	Els(selector string) ElementsTemplate
+	Has(selector string) bool
+}
+
+var _ ElementSelector = (*ElementTemplate)(nil)
+
 type ElementTemplate struct {
 	*rod.Element
 }
@@ -97,6 +105,20 @@ func (e ElementTemplate) WaitUntilHas(selector string) bool {
 	}
 
 	return false
+}
+
+func (e ElementTemplate) WaitEnabledAndWritable() error {
+	err := e.WaitEnabled()
+	if err != nil {
+		return err
+	}
+
+	err = e.WaitWritable()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type ElementsTemplate []*ElementTemplate

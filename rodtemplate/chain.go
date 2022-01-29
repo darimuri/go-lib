@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func NewInspectChain(template *ElementTemplate) *InspectChain {
+func NewInspectChain(template ElementSelector) *InspectChain {
 	return &InspectChain{
 		et:        template,
 		selectors: []string{},
@@ -16,7 +16,7 @@ func NewInspectChain(template *ElementTemplate) *InspectChain {
 type InspectChain struct {
 	skipNext  bool
 	prev      *InspectChain
-	et        *ElementTemplate
+	et        ElementSelector
 	selectors []string
 	errors    []error
 
@@ -27,7 +27,7 @@ type InspectOneFunc func(el *ElementTemplate) error
 type InspectEachFunc func(idx int, el *ElementTemplate) error
 
 //SelfChain ... returns self chain which returns self(chain) after ForOne
-//which means no chain informations are preserved.
+//which means no chain information are preserved.
 func (ic *InspectChain) SelfChain() *InspectChain {
 	return &InspectChain{
 		skipNext:  ic.skipNext,
