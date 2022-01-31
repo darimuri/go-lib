@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/input"
+
 )
 
 type Login struct {
@@ -49,6 +50,22 @@ func (l *Login) Submit(b *rod.Browser) error {
 				iFrame, err := e.Frame()
 				if err != nil {
 					continue
+				}
+
+				//to prevent nil pointer reference
+				if srcAttr, errAttr := e.Attribute("src"); errAttr != nil {
+					log.Println("failed to get iframe src attribute", errAttr)
+				} else if srcAttr == nil {
+					continue
+				} else if strings.HasPrefix(*srcAttr, "http") {
+					sameUrl, errSameUrl := IsSameDomainUrl(pt.URL(), *srcAttr)
+					if errSameUrl != nil {
+						log.Println("failed to parse url", pt.URL(), "error", errSameUrl.Error())
+					}
+					if !sameUrl {
+						log.Println("prevent nil pointer reference on iframe url(", *srcAttr, ")outside owner url domain", pt.URL())
+						continue
+					}
 				}
 
 				if has, _, errHas := iFrame.Has("body"); !has || errHas != nil {
