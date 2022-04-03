@@ -1,6 +1,7 @@
 package rodtemplate
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -326,6 +327,14 @@ func (p *PageTemplate) SelectOrPanic(selector string) *ElementTemplate {
 }
 
 //NewPageTemplate ...
-func NewPageTemplate(p *rod.Page) *PageTemplate {
+func NewPageTemplate(p *rod.Page, timeout time.Duration) *PageTemplate {
+	ctx, cancel := context.WithCancel(context.Background())
+	p.Context(ctx)
+
+	go func() {
+		time.Sleep(timeout)
+		cancel()
+	}()
+
 	return &PageTemplate{P: p}
 }
