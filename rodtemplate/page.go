@@ -327,14 +327,8 @@ func (p *PageTemplate) SelectOrPanic(selector string) *ElementTemplate {
 }
 
 //NewPageTemplate ...
-func NewPageTemplate(p *rod.Page, timeout time.Duration) *PageTemplate {
-	ctx, cancel := context.WithCancel(context.Background())
+func NewPageTemplate(p *rod.Page, ctx context.Context) *PageTemplate {
 	p.Context(ctx)
-
-	go func() {
-		time.Sleep(timeout)
-		cancel()
-	}()
 
 	return &PageTemplate{P: p}
 }
