@@ -115,8 +115,12 @@ func (p *PageTemplate) Input(selector string, value string) {
 	el.MustClick().MustSelectAllText().MustInput(value)
 }
 
-func (p *PageTemplate) PressKey(keyCode int32) {
-	p.P.Keyboard.MustPress(keyCode)
+func (p *PageTemplate) PressKey(key input.Key) {
+	p.Type(key)
+}
+
+func (p *PageTemplate) Type(key ...input.Key) {
+	p.P.Keyboard.MustType(key...)
 }
 
 func (p *PageTemplate) WaitLoadAndIdle() {
@@ -183,11 +187,11 @@ func (p *PageTemplate) WaitRepaint() {
 }
 
 func (p *PageTemplate) ScrollTop() {
-	p.P.Keyboard.MustPress(input.Home)
+	p.Type(input.Home)
 }
 
 func (p *PageTemplate) ScrollBottom() {
-	p.P.Keyboard.MustPress(input.End)
+	p.Type(input.End)
 }
 
 func (p *PageTemplate) ScrollBottomHuman() {
@@ -226,7 +230,7 @@ func (p *PageTemplate) Event() <-chan *rod.Message {
 
 func (p *PageTemplate) MaximizeToWindowBounds() {
 	bounds := p.P.MustGetWindow()
-	p.SetViewport(bounds.Width, bounds.Height)
+	p.SetViewport(*bounds.Width, *bounds.Height)
 }
 
 func (p *PageTemplate) SetViewport(width, height int) {
@@ -294,7 +298,7 @@ func (p *PageTemplate) ScreenShotWithOption(el *ElementTemplate, dumpPath string
 
 	req := &proto.PageCaptureScreenshot{
 		Format:  opt.Format,
-		Quality: opt.Quality,
+		Quality: &opt.Quality,
 		Clip: &proto.PageViewport{
 			X:      quad[0] + opt.XDelta,
 			Y:      quad[1] + opt.YDelta,
