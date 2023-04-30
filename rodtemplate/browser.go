@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/cdp"
 )
 
 type LoginHandler struct {
@@ -39,12 +38,7 @@ func (b *BrowserTemplate) Login(h LoginHandler) (*PageTemplate, error) {
 	var pt *PageTemplate
 
 	page := b.MustPage(h.LoginGateURL)
-	if err := page.WaitLoad(); err != nil {
-		if !cdp.ErrCtxDestroyed.Is(err) {
-			panic(err)
-		}
-		log.Println(err.Error(), "occurred occasionally but has no problem")
-	}
+	page.MustWaitRequestIdle()
 
 	pt = &PageTemplate{P: page}
 	pt.MaximizeToWindowBounds()
@@ -61,7 +55,7 @@ func (b *BrowserTemplate) Login(h LoginHandler) (*PageTemplate, error) {
 		p.MustClose()
 	}
 
-	pt.WaitLoad()
+	pt.WaitRequestIdle()
 
 	if h.LoginSuccessSelector != "" && pt.Has(h.LoginSuccessSelector) {
 		return pt, nil

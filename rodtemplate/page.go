@@ -33,13 +33,9 @@ func (p *PageTemplate) Navigate(url string) error {
 		return errors.New("page is nil")
 	}
 
-	p.P.MustWaitLoad()
-	p.P.MustWaitIdle()
-
 	p.P.MustNavigate(url)
 
-	p.P.MustWaitLoad()
-	p.P.MustWaitIdle()
+	p.P.MustWaitRequestIdle()
 
 	return nil
 }
@@ -123,10 +119,9 @@ func (p *PageTemplate) Type(key ...input.Key) {
 	p.P.Keyboard.MustType(key...)
 }
 
-func (p *PageTemplate) WaitLoadAndIdle() {
-	p.P.MustWaitNavigation()
-	p.WaitLoad()
-	p.WaitIdle()
+func (p *PageTemplate) WaitRequestIdle(excludes ...string) {
+	wait := p.P.MustWaitRequestIdle(excludes...)
+	wait()
 }
 
 func (p *PageTemplate) Has(selector string) bool {
@@ -164,20 +159,6 @@ func (p *PageTemplate) Reload() {
 
 func (p *PageTemplate) FrameID() proto.PageFrameID {
 	return p.P.FrameID
-}
-
-func (p *PageTemplate) WaitIdle() {
-	p.P.MustWaitIdle()
-}
-
-func (p *PageTemplate) WaitLoad() {
-	if err := p.P.WaitLoad(); err != nil {
-		if cErr, ok := err.(*cdp.Error); ok {
-			log.Println("failed to wait", cErr)
-		} else {
-			panic(err)
-		}
-	}
 }
 
 func (p *PageTemplate) WaitRepaint() {

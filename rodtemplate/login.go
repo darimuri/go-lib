@@ -41,7 +41,7 @@ func (l *Login) Submit(b *rod.Browser) error {
 
 	var loginPt *PageTemplate
 
-	pt.WaitLoad()
+	pt.WaitRequestIdle()
 
 	for i := 0; i < 10; i++ {
 		//find login input selector in iframes
@@ -83,7 +83,7 @@ func (l *Login) Submit(b *rod.Browser) error {
 				}
 
 				myPt := &PageTemplate{P: iFrame}
-				myPt.WaitLoad()
+				myPt.WaitRequestIdle()
 
 				if myPt.Has(h.LoginInputSelector) {
 					loginPt = myPt
@@ -100,7 +100,7 @@ func (l *Login) Submit(b *rod.Browser) error {
 				}
 
 				myPt := &PageTemplate{P: p}
-				myPt.WaitLoad()
+				myPt.WaitRequestIdle()
 
 				if myPt.Has(h.LoginInputSelector) {
 					loginPt = myPt
@@ -223,7 +223,7 @@ func (l *Login) Submit(b *rod.Browser) error {
 			return err
 		}
 
-		pt.WaitLoadAndIdle()
+		pt.WaitRequestIdle()
 	}
 
 	return nil
