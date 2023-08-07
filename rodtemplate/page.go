@@ -81,7 +81,7 @@ func (p *PageTemplate) MoveMouseTo(el *rod.Element) {
 	shape, err := el.Shape()
 	if err == nil {
 		point := shape.OnePointInside()
-		p.P.Mouse.MustMove(point.X, point.Y)
+		p.P.Mouse.MustMoveTo(point.X, point.Y)
 	} else {
 		if cErr, ok := err.(*cdp.Error); ok {
 			log.Println("failed to get element shape", cErr)
@@ -120,8 +120,17 @@ func (p *PageTemplate) Type(key ...input.Key) {
 }
 
 func (p *PageTemplate) WaitRequestIdle(excludes ...string) {
-	wait := p.P.MustWaitRequestIdle(excludes...)
+	wait := p.P.WaitRequestIdle(time.Millisecond*100, nil, excludes, nil)
+	//wait := p.P.MustWaitRequestIdle(excludes...)
 	wait()
+}
+
+func (p *PageTemplate) WaitIdle() {
+	p.P.MustWaitIdle()
+}
+
+func (p *PageTemplate) WaitLoad() {
+	p.P.MustWaitLoad()
 }
 
 func (p *PageTemplate) Has(selector string) bool {
@@ -310,7 +319,7 @@ func (p *PageTemplate) SelectOrPanic(selector string) *ElementTemplate {
 	return p.El(selector)
 }
 
-//NewPageTemplate ...
+// NewPageTemplate ...
 func NewPageTemplate(p *rod.Page) *PageTemplate {
 	return &PageTemplate{P: p}
 }

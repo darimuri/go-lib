@@ -25,9 +25,10 @@ type LoginHandler struct {
 
 	CaptchaHandler           func(pt *PageTemplate) error
 	LoginLinkHandler         func(pt *PageTemplate) error
+	LoginBeforeSuccessCheckHandler func(pt *PageTemplate) (bool, error)
 	LoginBeforeSubmitHandler func(pt *PageTemplate) error
-	LoginPostSubmitHandler   func(pt *PageTemplate) error
-	LoginSuccessCheckHandler func(pt *PageTemplate) (bool, error)
+	LoginPostSubmitHandler       func(pt *PageTemplate) error
+	LoginPostSuccessCheckHandler func(pt *PageTemplate) (bool, error)
 }
 
 type BrowserTemplate struct {
@@ -36,6 +37,8 @@ type BrowserTemplate struct {
 
 func (b *BrowserTemplate) Login(h LoginHandler) (*PageTemplate, error) {
 	var pt *PageTemplate
+
+	log.Println("go to login gate", h.LoginGateURL)
 
 	page := b.MustPage(h.LoginGateURL)
 	page.MustWaitRequestIdle()
@@ -55,12 +58,10 @@ func (b *BrowserTemplate) Login(h LoginHandler) (*PageTemplate, error) {
 		p.MustClose()
 	}
 
-	pt.WaitRequestIdle()
-
 	if h.LoginSuccessSelector != "" && pt.Has(h.LoginSuccessSelector) {
 		return pt, nil
-	} else if h.LoginSuccessCheckHandler != nil {
-		succ, errHandle := h.LoginSuccessCheckHandler(pt)
+	} else if h.LoginBeforeSuccessCheckHandler != nil {
+		succ, errHandle := h.LoginBeforeSuccessCheckHandler(pt)
 		if succ && errHandle == nil {
 			return pt, nil
 		} else if errHandle != nil {
@@ -68,24 +69,30 @@ func (b *BrowserTemplate) Login(h LoginHandler) (*PageTemplate, error) {
 		}
 	}
 
+
 	if h.LoginURL != "" {
+		log.Println("go to login page", h.LoginURL)
 		if err = pt.Navigate(h.LoginURL); err != nil {
 			return nil, err
 		}
 	} else if h.LoginLinkHandler != nil {
+		log.Println("go to login page", "with LoginLinkHandler")
 		if err = h.LoginLinkHandler(pt); err != nil {
 			return nil, err
 		}
 	} else {
+		log.Println("go to login page", "with LoginLinkSelector")
 		pt.ClickWhenAvailable(h.LoginLinkSelector)
 	}
 
 	login := &Login{PageTemplate: pt, Handler: h}
 
+	log.Println("validate login")
 	if err = login.Validate(); err != nil {
 		return nil, err
 	}
 
+	log.Println("submit login")
 	if err = login.Submit(b.Browser); err != nil {
 		return nil, err
 	}

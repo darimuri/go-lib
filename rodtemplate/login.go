@@ -11,7 +11,6 @@ import (
 
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/input"
-
 )
 
 type Login struct {
@@ -41,7 +40,9 @@ func (l *Login) Submit(b *rod.Browser) error {
 
 	var loginPt *PageTemplate
 
-	pt.WaitRequestIdle()
+	pt.WaitIdle()
+
+	log.Println("find login page")
 
 	for i := 0; i < 10; i++ {
 		//find login input selector in iframes
@@ -83,10 +84,11 @@ func (l *Login) Submit(b *rod.Browser) error {
 				}
 
 				myPt := &PageTemplate{P: iFrame}
-				myPt.WaitRequestIdle()
+				//myPt.WaitRequestIdle()
 
 				if myPt.Has(h.LoginInputSelector) {
 					loginPt = myPt
+					log.Println("found LoginInputSelector", h.LoginLinkSelector, "in iframes")
 					break
 				}
 			}
@@ -100,10 +102,10 @@ func (l *Login) Submit(b *rod.Browser) error {
 				}
 
 				myPt := &PageTemplate{P: p}
-				myPt.WaitRequestIdle()
 
 				if myPt.Has(h.LoginInputSelector) {
 					loginPt = myPt
+					log.Println("found LoginInputSelector", h.LoginLinkSelector, "in pages")
 					break
 				}
 			}
@@ -111,14 +113,12 @@ func (l *Login) Submit(b *rod.Browser) error {
 
 		//find login input selector in page
 		if loginPt == nil {
-			for i := 0; i < 100; i++ {
-				if pt.Has(h.LoginInputSelector) {
-					loginPt = pt
-					break
-				}
-
-				time.Sleep(time.Millisecond * 100)
+			if pt.Has(h.LoginInputSelector) {
+				loginPt = pt
+				log.Println("found LoginInputSelector", h.LoginLinkSelector, "in current page")
+				break
 			}
+
 		}
 
 		if loginPt != nil {
@@ -162,8 +162,8 @@ func (l *Login) Submit(b *rod.Browser) error {
 		}
 	}
 
-	if h.LoginSuccessCheckHandler != nil {
-		success, errSuccessCheck := h.LoginSuccessCheckHandler(pt)
+	if h.LoginPostSuccessCheckHandler != nil {
+		success, errSuccessCheck := h.LoginPostSuccessCheckHandler(pt)
 		if errSuccessCheck != nil {
 			return errSuccessCheck
 		}
@@ -222,8 +222,6 @@ func (l *Login) Submit(b *rod.Browser) error {
 		if err := pt.Navigate(h.LoginAfterURL); err != nil {
 			return err
 		}
-
-		pt.WaitRequestIdle()
 	}
 
 	return nil

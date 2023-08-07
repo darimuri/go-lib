@@ -47,6 +47,10 @@ func toElementsTemplate(elements rod.Elements) ElementsTemplate {
 	return est
 }
 
+func NewElementsTemplate(elements rod.Elements) ElementsTemplate {
+	return toElementsTemplate(elements)
+}
+
 func (e ElementTemplate) ElE(selector string) (*rod.Element, error) {
 	return e.Element.Element(selector)
 }
