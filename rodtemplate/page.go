@@ -28,6 +28,48 @@ type PageTemplate struct {
 	P *rod.Page
 }
 
+func (p *PageTemplate) El(selector string) *ElementTemplate {
+	return &ElementTemplate{Element: p.P.MustElement(selector)}
+}
+
+func (p *PageTemplate) Els(selector string) ElementsTemplate {
+	return toElementsTemplate(p.P.MustElements(selector))
+}
+
+func (p *PageTemplate) Has(selector string) bool {
+	has, _, err := p.P.Has(selector)
+	if err != nil {
+		log.Printf("failed to find element using selector %s\n", selector)
+		return false
+	}
+
+	return has
+}
+
+// WaitUntilHasForYear
+// calls WaitUntilHas(selector, time.Millisecond*10, time.Hour*24*365)
+func (p PageTemplate) WaitUntilHasForYear(selector string) bool {
+	return p.WaitUntilHas(selector, time.Millisecond*10, time.Hour*24*365)
+}
+
+// WaitUntilHasForHour
+// calls WaitUntilHas(selector, time.Millisecond*10, time.Hour)
+func (p PageTemplate) WaitUntilHasForHour(selector string) bool {
+	return p.WaitUntilHas(selector, time.Millisecond*10, time.Hour)
+}
+
+func (p PageTemplate) WaitUntilHas(selector string, sleepDuration time.Duration, deadline time.Duration) bool {
+	deadlineTime := time.Now().Add(deadline)
+	for time.Now().Before(deadlineTime) {
+		if p.Has(selector) {
+			return true
+		}
+		time.Sleep(sleepDuration)
+	}
+
+	return false
+}
+
 func (p *PageTemplate) Navigate(url string) error {
 	if p.P == nil {
 		return errors.New("page is nil")
@@ -133,15 +175,6 @@ func (p *PageTemplate) WaitLoad() {
 	p.P.MustWaitLoad()
 }
 
-func (p *PageTemplate) Has(selector string) bool {
-	has, _, err := p.P.Has(selector)
-	if err != nil {
-		log.Printf("failed to find element using selector %s\n", selector)
-		return false
-	}
-
-	return has
-}
 
 func (p PageTemplate) GetVisibleHeight(selector string) float64 {
 	if p.Has(selector) {
@@ -152,14 +185,6 @@ func (p PageTemplate) GetVisibleHeight(selector string) float64 {
 	}
 
 	return 0.0
-}
-
-func (p *PageTemplate) El(selector string) *ElementTemplate {
-	return &ElementTemplate{Element: p.P.MustElement(selector)}
-}
-
-func (p *PageTemplate) Els(selector string) ElementsTemplate {
-	return toElementsTemplate(p.P.MustElements(selector))
 }
 
 func (p *PageTemplate) Reload() {

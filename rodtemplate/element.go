@@ -21,6 +21,14 @@ type ElementTemplate struct {
 	*rod.Element
 }
 
+func (e ElementTemplate) El(selector string) *ElementTemplate {
+	return &ElementTemplate{Element: e.MustElement(selector)}
+}
+
+func (e ElementTemplate) Els(selector string) ElementsTemplate {
+	return toElementsTemplate(e.MustElements(selector))
+}
+
 func (e ElementTemplate) Has(selector string) bool {
 	has, _, err := e.Element.Has(selector)
 	if err != nil {
@@ -30,12 +38,28 @@ func (e ElementTemplate) Has(selector string) bool {
 	return has
 }
 
-func (e ElementTemplate) El(selector string) *ElementTemplate {
-	return &ElementTemplate{Element: e.MustElement(selector)}
+// WaitUntilHasForYear
+// calls WaitUntilHas(selector, time.Millisecond*10, time.Hour*24*365)
+func (e ElementTemplate) WaitUntilHasForYear(selector string) bool {
+	return e.WaitUntilHas(selector, time.Millisecond*10, time.Hour*24*365)
 }
 
-func (e ElementTemplate) Els(selector string) ElementsTemplate {
-	return toElementsTemplate(e.MustElements(selector))
+// WaitUntilHasForHour
+// calls WaitUntilHas(selector, time.Millisecond*10, time.Hour)
+func (e ElementTemplate) WaitUntilHasForHour(selector string) bool {
+	return e.WaitUntilHas(selector, time.Millisecond*10, time.Hour)
+}
+
+func (e ElementTemplate) WaitUntilHas(selector string, sleepDuration time.Duration, deadline time.Duration) bool {
+	deadlineTime := time.Now().Add(deadline)
+	for time.Now().Before(deadlineTime) {
+		if e.Has(selector) {
+			return true
+		}
+		time.Sleep(sleepDuration)
+	}
+
+	return false
 }
 
 func toElementsTemplate(elements rod.Elements) ElementsTemplate {
@@ -98,17 +122,6 @@ func (e ElementTemplate) MustAttributeAsInt(attr string) int {
 	}
 
 	return val
-}
-
-func (e ElementTemplate) WaitUntilHas(selector string) bool {
-	for i := 0; i < 1000; i++ {
-		if e.Has(selector) {
-			return true
-		}
-		time.Sleep(time.Millisecond * 100)
-	}
-
-	return false
 }
 
 func (e ElementTemplate) WaitEnabledAndWritable() error {
